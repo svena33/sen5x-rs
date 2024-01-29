@@ -1,13 +1,13 @@
 [package]
 name = "sen5x-rs"
-version = "0.1.3"
+version = "0.0.1"
 edition = "2021"
 authors = ["Sven Arends <sven@svena33.com>"]
 license = "MIT OR Apache-2.0"
 description = "embedded-hal driver for the sen5x environmental sensor node for HVAC and air quality applications."
 documentation = "https://docs.rs/sen5x-rs"
 repository = "https://github.com/svena33/sen5x-rs"
-keywords = ["airquality", "sen5x", "pm2.5", "sensirion", "sensor"]
+keywords = ["airquality", "sen5x", "pm25", "sensirion", "sensor"]
 categories = ["embedded", "no-std"]
 
 [dependencies]
