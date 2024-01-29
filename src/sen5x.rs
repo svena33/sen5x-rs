@@ -129,6 +129,7 @@ where
     }
 
     // Taken from `sensirion-i2c-rs` (which currently depends on the older version 0.2.x of `embedded-hal`).
+    // This function does not perform the CRC check.
     // Remove once `sensirion-i2c-rs` is updated.
     pub fn read_words_with_crc(&mut self, addr: u8, data: &mut [u8]) -> Result<(), I2C::Error> {
         assert!(
