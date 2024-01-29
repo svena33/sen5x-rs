@@ -1,0 +1,41 @@
+name: SEN5x CI
+
+on:
+  push:
+    paths:
+      - "./src/**"
+      - "./Cargo.toml"
+    branches: [main]
+    tags:
+      - "v*.*.*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  sen5x-rs-cicd:
+    # Test locally using: `$ act -j "sen5x-rs-cicd" --container-architecture linux/amd64 -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:rust-latest`.
+    name: SEN5x-rs CI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Conventional Changelog Action
+        id: Conventional_Changelog_action
+        uses: TriPSs/conventional-changelog-action@v5.1.0
+        with:
+          github-token: ${{ secrets.github_token }}
+          output-file: "false"
+          tag-prefix: "sen5x-rs/"
+          version-file: ./Cargo.toml
+          version-path: package.version
+          skip-on-empty: "false"
+      - uses: katyo/publish-crates@v2
+        with:
+          path: "."
+          dry-run: false
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
