@@ -1,0 +1,25 @@
+[package]
+name = "sen5x-rs"
+version = "0.1.0"
+edition = "2021"
+authors = ["Sven Arends <sven@svena33.com>"]
+license = "MIT OR Apache-2.0"
+description = "embedded-hal driver for the sen5x environmental sensor node for HVAC and air quality applications."
+documentation = "https://docs.rs/sen5x-rs"
+repository = "https://github.com/svena33/sen5x-rs"
+keywords = [
+    "airquality",
+    "humidity",
+    "pm2.5",
+    "sensirion",
+    "sensor",
+    "temperature",
+    "voc",
+]
+categories = ["embedded", "no-std"]
+
+[dependencies]
+embedded-hal = { version = "=1.0.0" }
+
+[dev-dependencies]
+embedded-hal-mock = { version = "=0.10.0", features = ["eh1"] }
