@@ -3,8 +3,8 @@ name: SEN5x CI
 on:
   push:
     paths:
-      - "./src/**"
-      - "./Cargo.toml"
+      - "src/**"
+      - "Cargo.toml"
     branches: [main]
     tags:
       - "v*.*.*"
