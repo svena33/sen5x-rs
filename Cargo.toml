@@ -7,15 +7,7 @@ license = "MIT OR Apache-2.0"
 description = "embedded-hal driver for the sen5x environmental sensor node for HVAC and air quality applications."
 documentation = "https://docs.rs/sen5x-rs"
 repository = "https://github.com/svena33/sen5x-rs"
-keywords = [
-    "airquality",
-    "humidity",
-    "pm2.5",
-    "sensirion",
-    "sensor",
-    "temperature",
-    "voc",
-]
+keywords = ["airquality", "sen5x", "pm2.5", "sensirion", "sensor"]
 categories = ["embedded", "no-std"]
 
 [dependencies]
