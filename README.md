@@ -6,9 +6,6 @@ The implementation is based on [scd4x-rs](https://github.com/hauju/scd4x-rs) and
 
 This driver is compatible with `embedded-hal v1.0`.
 
-
-_This driver reimplements some common functions of [sensirion-i2c-rs](https://github.com/Sensirion/sensirion-i2c-rs) since that library supports only `embedded-hal<=v0.2.7`._
-
 ## Sensirion SEN5x
 
 The SEN5x is a environmental sensor node for HVAC and air quality applications. It measures

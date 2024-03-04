@@ -1,7 +1,9 @@
 use embedded_hal::{delay::DelayNs, i2c::I2c};
+use sensirion_i2c::i2c as sen_i2c;
 
 use crate::commands::Command;
 use crate::types::Sen5xData;
+use crate::Error;
 
 /// The default I²C address of the SEN5X sensor.
 const _SEN5X_I2C_ADDRESS: u8 = 0x69;
@@ -19,9 +21,9 @@ pub struct Sen5x<I2C, D> {
     address: u8,
 }
 
-impl<I2C, D> Sen5x<I2C, D>
+impl<I2C, D, E> Sen5x<I2C, D>
 where
-    I2C: I2c,
+    I2C: I2c<Error = E>,
     D: DelayNs,
 {
     /// Create a new instance using the default I2C address.
@@ -45,20 +47,20 @@ where
     }
 
     /// Start periodic measurement, signal update interval is 1 second.
-    pub fn start_measurement(&mut self) -> Result<(), I2C::Error> {
+    pub fn start_measurement(&mut self) -> Result<(), Error<E>> {
         self.write_command(Command::StartMeasurement)?;
         self.is_running = true;
         Ok(())
     }
 
     /// The reinit command reinitializes the sensor by reloading user settings from EEPROM.
-    pub fn reinit(&mut self) -> Result<(), I2C::Error> {
+    pub fn reinit(&mut self) -> Result<(), Error<E>> {
         self.write_command(Command::Reinit)?;
         Ok(())
     }
 
     /// Get 48-bit serial number.
-    pub fn serial_number(&mut self) -> Result<u64, I2C::Error> {
+    pub fn serial_number(&mut self) -> Result<u64, Error<E>> {
         let mut buf = [0; 9];
         self.delayed_read_cmd(Command::GetSerialNumber, &mut buf)?;
         let serial = u64::from(buf[0]) << 40
@@ -72,7 +74,7 @@ where
     }
 
     /// Read converted sensor data.
-    pub fn measurement(&mut self) -> Result<Sen5xData, I2C::Error> {
+    pub fn measurement(&mut self) -> Result<Sen5xData, Error<E>> {
         let mut buf = [0; 24];
         self.delayed_read_cmd(Command::ReadMeasurement, &mut buf)?;
         // buf[2], buf[5], buf[8], buf[11], buf[14], buf[17], buf[20], buf[23] are CRC bytes and are not used.
@@ -98,7 +100,7 @@ where
     }
 
     /// Check whether new measurement data is available for read-out.
-    pub fn data_ready_status(&mut self) -> Result<bool, I2C::Error> {
+    pub fn data_ready_status(&mut self) -> Result<bool, Error<E>> {
         let mut buf = [0; 3];
         self.delayed_read_cmd(Command::GetReadDataReadyStatus, &mut buf)?;
         let status = u16::from_be_bytes([buf[0], buf[1]]);
@@ -109,35 +111,17 @@ where
     }
 
     /// Writes commands without additional arguments.
-    fn write_command(&mut self, cmd: Command) -> Result<(), I2C::Error> {
+    fn write_command(&mut self, cmd: Command) -> Result<(), Error<E>> {
         let (command, delay, _allowed_if_running) = cmd.as_tuple();
-        self.write_command_u16(self.address, command)?;
+        sen_i2c::write_command_u16(&mut self.i2c, self.address, command).map_err(Error::I2c)?;
         self.delay.delay_ms(delay);
         Ok(())
     }
 
     /// Command for reading values from the sensor.
-    fn delayed_read_cmd(&mut self, cmd: Command, data: &mut [u8]) -> Result<(), I2C::Error> {
+    fn delayed_read_cmd(&mut self, cmd: Command, data: &mut [u8]) -> Result<(), Error<E>> {
         self.write_command(cmd)?;
-        self.read_words_with_crc(self.address, data)?;
-        Ok(())
-    }
-
-    pub fn write_command_u16(&mut self, address: u8, cmd: u16) -> Result<(), I2C::Error> {
-        self.i2c.write(address, &cmd.to_be_bytes())?;
-        Ok(())
-    }
-
-    // Taken from `sensirion-i2c-rs` (which currently depends on the older version 0.2.x of `embedded-hal`).
-    // This function does not perform the CRC check.
-    // Remove once `sensirion-i2c-rs` is updated.
-    pub fn read_words_with_crc(&mut self, addr: u8, data: &mut [u8]) -> Result<(), I2C::Error> {
-        assert!(
-            data.len() % 3 == 0,
-            "Buffer must hold a multiple of 3 bytes"
-        );
-        self.i2c.read(addr, data)?;
-        // crc8::validate(data)?;
+        let _ = sen_i2c::read_words_with_crc(&mut self.i2c, self.address, data).map_err(Error::I2c);
         Ok(())
     }
 }
