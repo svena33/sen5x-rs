@@ -2,7 +2,7 @@
 //! This driver was built using [embedded-hal](https://docs.rs/embedded-hal/) traits.
 //! The implementation is based on [scd4x-rs](https://github.com/hauju/scd4x-rs) and [sgpc3-rs](https://github.com/mjaakkol/sgpc3-rs).
 //! This driver is compatible with `embedded-hal` v1.0.
-#![no_std]
+#![cfg_attr(not(test), no_std)]
 
 mod sen5x;
 pub use crate::sen5x::Sen5x;
