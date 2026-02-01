@@ -1,8 +1,8 @@
 [package]
 name = "sen5x-rs"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
-authors = ["Sven Arends <sven@svena33.com>"]
+authors = ["Sven Arends <sven@svenarends.com>"]
 license = "MIT OR Apache-2.0"
 description = "embedded-hal driver for the sen5x environmental sensor node for HVAC and air quality applications."
 documentation = "https://docs.rs/sen5x-rs"

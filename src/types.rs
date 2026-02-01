@@ -1,4 +1,5 @@
 /// SEN5x sensor data.
+#[derive(Debug, Clone, Copy)]
 pub struct Sen5xData {
     pub pm1_0: f32,
     pub pm2_5: f32,
