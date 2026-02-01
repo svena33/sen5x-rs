@@ -2,6 +2,16 @@
 
 This project follows [semantic versioning](https://semver.org/).
 
+## [0.3.0]
+
+### Added
+
+- Add async I2C support via `async` feature flag ([#2](https://github.com/svena33/sen5x-rs/issues/2))
+
+### Changed
+
+- Update `sensirion-i2c` to 0.4.0
+
 ## [0.2.2]
 
 ### Added

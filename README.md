@@ -6,6 +6,15 @@ The implementation is based on [scd4x-rs](https://github.com/hauju/scd4x-rs) and
 
 This driver is compatible with `embedded-hal v1.0`.
 
+## Features
+
+- **`async`** - Enables async I2C support via `embedded-hal-async`. When enabled, async versions of all methods are available with an `_async` suffix (e.g., `measurement_async()`).
+
+```toml
+[dependencies]
+sen5x-rs = { version = "0.3", features = ["async"] }
+```
+
 ## Sensirion SEN5x
 
 The SEN5x is a environmental sensor node for HVAC and air quality applications. It measures

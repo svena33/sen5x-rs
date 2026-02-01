@@ -1,5 +1,9 @@
 use embedded_hal::{delay::DelayNs, i2c::I2c};
+#[cfg(feature = "async")]
+use embedded_hal_async::{delay::DelayNs as AsyncDelayNs, i2c::I2c as AsyncI2c};
 use sensirion_i2c::i2c as sen_i2c;
+#[cfg(feature = "async")]
+use sensirion_i2c::i2c_async as sen_i2c_async;
 
 use crate::commands::Command;
 use crate::types::Sen5xData;
@@ -122,6 +126,103 @@ where
     fn delayed_read_cmd(&mut self, cmd: Command, data: &mut [u8]) -> Result<(), Error<E>> {
         self.write_command(cmd)?;
         let _ = sen_i2c::read_words_with_crc(&mut self.i2c, self.address, data).map_err(Error::I2c);
+        Ok(())
+    }
+}
+
+#[cfg(feature = "async")]
+impl<I2C, D, E> Sen5x<I2C, D>
+where
+    I2C: AsyncI2c<Error = E>,
+    D: AsyncDelayNs,
+{
+    /// Start periodic measurement, signal update interval is 1 second (async version).
+    pub async fn start_measurement_async(&mut self) -> Result<(), Error<E>> {
+        self.write_command_async(Command::StartMeasurement).await?;
+        self.is_running = true;
+        Ok(())
+    }
+
+    /// The reinit command reinitializes the sensor by reloading user settings from EEPROM (async version).
+    pub async fn reinit_async(&mut self) -> Result<(), Error<E>> {
+        self.write_command_async(Command::Reinit).await?;
+        Ok(())
+    }
+
+    /// Get 48-bit serial number (async version).
+    pub async fn serial_number_async(&mut self) -> Result<u64, Error<E>> {
+        let mut buf = [0; 9];
+        self.delayed_read_cmd_async(Command::GetSerialNumber, &mut buf)
+            .await?;
+        let serial = u64::from(buf[0]) << 40
+            | u64::from(buf[1]) << 32
+            | u64::from(buf[3]) << 24
+            | u64::from(buf[4]) << 16
+            | u64::from(buf[6]) << 8
+            | u64::from(buf[7]);
+
+        Ok(serial)
+    }
+
+    /// Read converted sensor data (async version).
+    pub async fn measurement_async(&mut self) -> Result<Sen5xData, Error<E>> {
+        let mut buf = [0; 24];
+        self.delayed_read_cmd_async(Command::ReadMeasurement, &mut buf)
+            .await?;
+        // buf[2], buf[5], buf[8], buf[11], buf[14], buf[17], buf[20], buf[23] are CRC bytes and are not used.
+        let pm1_0 = u16::from_be_bytes([buf[0], buf[1]]);
+        let pm2_5 = u16::from_be_bytes([buf[3], buf[4]]);
+        let pm4_0 = u16::from_be_bytes([buf[6], buf[7]]);
+        let pm10_0 = u16::from_be_bytes([buf[9], buf[10]]);
+        let humidity = u16::from_be_bytes([buf[12], buf[13]]);
+        let temperature = u16::from_be_bytes([buf[15], buf[16]]);
+        let voc_index = u16::from_be_bytes([buf[18], buf[19]]);
+        let nox_index = u16::from_be_bytes([buf[21], buf[22]]);
+
+        Ok(Sen5xData {
+            pm1_0: pm1_0 as f32 / 10f32,
+            pm2_5: pm2_5 as f32 / 10f32,
+            pm4_0: pm4_0 as f32 / 10f32,
+            pm10_0: pm10_0 as f32 / 10f32,
+            temperature: temperature as f32 / 200f32,
+            humidity: humidity as f32 / 100f32,
+            voc_index: voc_index as f32 / 10f32,
+            nox_index: nox_index as f32 / 10f32,
+        })
+    }
+
+    /// Check whether new measurement data is available for read-out (async version).
+    pub async fn data_ready_status_async(&mut self) -> Result<bool, Error<E>> {
+        let mut buf = [0; 3];
+        self.delayed_read_cmd_async(Command::GetReadDataReadyStatus, &mut buf)
+            .await?;
+        let status = u16::from_be_bytes([buf[0], buf[1]]);
+
+        // 7FF is the last 11 bytes. If they are all zeroes, then data isn't ready.
+        let ready = (status & 0x7FF) != 0;
+        Ok(ready)
+    }
+
+    /// Writes commands without additional arguments (async version).
+    async fn write_command_async(&mut self, cmd: Command) -> Result<(), Error<E>> {
+        let (command, delay, _allowed_if_running) = cmd.as_tuple();
+        sen_i2c_async::write_command_u16(&mut self.i2c, self.address, command)
+            .await
+            .map_err(Error::I2c)?;
+        self.delay.delay_ms(delay).await;
+        Ok(())
+    }
+
+    /// Command for reading values from the sensor (async version).
+    async fn delayed_read_cmd_async(
+        &mut self,
+        cmd: Command,
+        data: &mut [u8],
+    ) -> Result<(), Error<E>> {
+        self.write_command_async(cmd).await?;
+        let _ = sen_i2c_async::read_words_with_crc(&mut self.i2c, self.address, data)
+            .await
+            .map_err(Error::I2c);
         Ok(())
     }
 }
