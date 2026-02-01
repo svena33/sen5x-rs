@@ -9,6 +9,7 @@ This driver is compatible with `embedded-hal v1.0`.
 ## Features
 
 - **`async`** - Enables async I2C support via `embedded-hal-async`. When enabled, async versions of all methods are available with an `_async` suffix (e.g., `measurement_async()`).
+- **`serde`** - Enables `Serialize` derive on `Sen5xData` for easy JSON serialization.
 
 ```toml
 [dependencies]

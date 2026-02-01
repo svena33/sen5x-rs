@@ -2,6 +2,12 @@
 
 This project follows [semantic versioning](https://semver.org/).
 
+## [0.4.0]
+
+### Added
+
+- Add optional `serde` feature for `Serialize` derive on `Sen5xData`
+
 ## [0.3.0]
 
 ### Added
